@@ -3,7 +3,10 @@ module.exports = {
     content: ["./index.html",
             "./js/*.js"],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+            }
+        },
     },
     plugins: [],
 }
