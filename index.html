@@ -27,7 +27,7 @@
 </header>
 
 <main>
-  <div class="flex">
+  <article class="flex" id="home">
     <div class="w-1/2 p-4 flex flex-col">
       <p class="text-2xl leading-relaxed">
         Hi, I'm Austin!
@@ -53,7 +53,21 @@
               alt="Lewis Hamilton F1 Racecar"
       >
     </div>
+  </article>
+
+  <div id="spinner" class="fixed inset-0 flex items-center justify-center z-50 bg-gray-100/50 invisible">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
   </div>
+
+  <!-- Race Section -->
+  <section id="races" class="hidden p-4 bg-gray-100 rounded-lg shadow-md mt-6">
+  </section>
+
+  <section id="raceResults">
+    <div id="qualifying"></div>
+    <div id="result"></div>
+  </section>
+
   <footer class="fixed bottom-0 left-0 z-20 w-full p-4 bg-black shadow md:flex md:items-center md:justify-center md:p-6">
     <span class="text-lg text-red-600 sm:text-center">Copyright © 2024 Cynchronized <a href="https://github.com/Cynchronized" target="_blank"> <i class="ml-1 fab fa-github hover:animate-spin"></i></a>
     </span>
