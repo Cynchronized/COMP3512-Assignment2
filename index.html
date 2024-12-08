@@ -134,6 +134,126 @@
   </div>
 
 
+  <!-- Driver Dialog -->
+  <dialog id="driver-dialog" class="rounded-lg shadow-lg p-10 bg-white w-auto mx-auto text-gray-800">
+
+    <!-- Close Button -->
+    <button
+            id="driver-dialog-close"
+            class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+      <!-- Icon from https://heroicons.com/ -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Driver Info Section -->
+    <div id="driver-info" class="flex space-x-6">
+    <div class="flex flex-col items-center w-1/2">
+      <h2 class="text-xl font-bold mb-4 text-center">Driver Details</h2>
+      <ul class="list-none w-full text-left space-y-2">
+        <li id="driver-name" class="font-medium text-gray-700"></li>
+        <li id="driver-dob" class="text-sm text-gray-600"></li>
+        <li id="driver-age" class="text-sm text-gray-600"></li>
+        <li id="driver-nationality" class="text-sm text-gray-600"></li>
+        <li class="text-sm text-blue-500 underline cursor-pointer"><a id="driver-url" target="_blank"></a></li>
+      </ul>
+      <img src="https://placehold.co/300x300" alt="Driver Image" class="rounded shadow-md mt-12">
+    </div>
+
+    <!-- Race Results Table Section -->
+    <div class="w-1/2">
+      <h3 class="text-lg font-semibold mb-2">Race Results</h3>
+      <table id="driver-results-table" class="min-w-full bg-white border border-gray-300">
+        <thead>
+        <tr>
+          <th class="px-4 py-2 text-left border-b">Rnd</th>
+          <th class="px-4 py-2 text-left border-b">Name</th>
+          <th class="px-4 py-2 text-left border-b">Pos</th>
+          <th class="px-4 py-2 text-left border-b">Points</th>
+        </tr>
+        </thead>
+        <tbody id="driver-results-body">
+        </tbody>
+      </table>
+    </div>
+    </div>
+  </dialog>
+
+  <!-- Constructor Dialog -->
+  <dialog id="constructor-dialog" class="rounded-lg shadow-lg p-10 bg-white w-auto mx-auto text-gray-800">
+
+    <!-- Close Button -->
+    <button
+            id="constructor-dialog-close"
+            class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+      <!-- Icon from https://heroicons.com/ -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Constructor Info Section -->
+    <div id="constructor-info" class="flex space-x-6">
+      <div class="flex flex-col items-center w-1/2">
+        <h2 class="text-xl font-bold mb-4 text-center">Constructor Details</h2>
+        <ul class="list-none w-full text-left space-y-2">
+          <li id="constructor-name" class="font-medium text-gray-700"></li>
+          <li id="constructor-nationality" class="text-sm text-gray-600"></li>
+          <li class="text-sm text-blue-500 underline cursor-pointer"><a id="constructor-url" target="_blank"></a></li>
+        </ul>
+        <img src="https://placehold.co/300x300" alt="Driver Image" class="rounded shadow-md mt-12">
+      </div>
+
+      <!-- Race Results Table Section -->
+      <div class="w-1/2">
+        <h3 class="text-lg font-semibold mb-2">Race Results</h3>
+        <table id="constructor-results-table" class="min-w-full bg-white border border-gray-300">
+          <thead>
+          <tr>
+            <th class="px-4 py-2 text-left border-b">Rnd</th>
+            <th class="px-4 py-2 text-left border-b">Name</th>
+            <th class="px-4 py-2 text-left border-b">Driver</th>
+            <th class="px-4 py-2 text-left border-b">Pos</th>
+          </tr>
+          </thead>
+          <tbody id="constructor-results-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Circuit Dialog -->
+  <dialog id="circuit-dialog" class="rounded-lg shadow-xl p-8 bg-white w-fit mx-auto text-gray-800">
+
+    <!-- Close Button -->
+    <button
+            id="circuit-dialog-close"
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none">
+      <!-- Icon from https://heroicons.com/ -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Circuit Info Section -->
+    <div id="circuit-info" class="flex flex-col items-center space-y-6">
+      <h2 class="text-2xl font-semibold text-center text-gray-900 mb-4">Circuit Details</h2>
+
+      <ul class="list-none w-full text-left space-y-2">
+        <li id="circuit-name" class="font-medium text-gray-700 text-lg"></li>
+        <li id="circuit-location" class="text-sm text-gray-600"></li>
+        <li id="circuit-country" class="text-sm text-gray-600"></li>
+        <li class="text-sm text-blue-500 underline cursor-pointer"><a id="circuit-url" target="_blank"></a></li>
+      </ul>
+
+      <img src="https://placehold.co/300x300" alt="Circuit Image" class="rounded-lg shadow-md mt-4">
+    </div>
+  </dialog>
+
+
+
 </main>
 
 <footer class="w-full p-4 bg-black shadow md:flex md:items-center md:justify-center md:p-6">

@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", (e) => {
     let raceURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/races.php?season="
     let resultsURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/results.php?season="
     let qualifyingURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/qualifying.php?season="
+    const driverCloseButton = document.querySelector("#driver-dialog-close");
+    const constructorCloseButton = document.querySelector("#constructor-dialog-close");
+    const circuitCloseButton = document.querySelector('#circuit-dialog-close')
 
     // Go back to home page
     F1Logo.addEventListener('click', (e) => {
@@ -15,6 +18,19 @@ document.addEventListener("DOMContentLoaded", (e) => {
             races.classList.toggle('hidden');
         }
     })
+
+    circuitCloseButton.addEventListener("click", () => {
+        closeCircuitDialog()
+    })
+
+    driverCloseButton.addEventListener("click", () => {
+        closeDriverDialog()
+    });
+
+    constructorCloseButton.addEventListener("click", () => {
+        closeConstructorDialog()
+    })
+
 
     // Drop-down check if user selects season
     seasonSelect.addEventListener('change', (event) => {
@@ -104,20 +120,26 @@ document.addEventListener("DOMContentLoaded", (e) => {
         const raceDetails = [
             { label: 'Round', value: raceInfo[0].round },
             { label: 'Year', value: raceInfo[0].year },
-            { label: 'Circuit', value: raceInfo[0].circuit.name },
+            { label: 'Circuit', value: raceInfo[0].circuit.name, underline: true, circuitId: raceInfo[0].circuit.id },
             { label: 'Date', value: raceInfo[0].date },
         ];
 
-        raceDetails.forEach(detail => {
+        raceDetails.forEach(r => {
             const li = document.createElement('li');
             li.className = 'flex items-center text-sm text-gray-700';
 
             const labelSpan = document.createElement('span');
             labelSpan.className = 'font-semibold mr-2 text-gray-900';
-            labelSpan.textContent = `${detail.label}:`;
+            labelSpan.textContent = `${r.label}:`;
 
             const valueSpan = document.createElement('span');
-            valueSpan.textContent = detail.value;
+            valueSpan.textContent = r.value;
+
+            // Underline the circuit value
+            if (r.underline) {
+                valueSpan.classList.add('underline', 'hover:cursor-pointer');
+                valueSpan.addEventListener('click', () => openCircuitDialog(r.circuitId))
+            }
 
             li.appendChild(labelSpan);
             li.appendChild(valueSpan);
@@ -219,8 +241,12 @@ document.addEventListener("DOMContentLoaded", (e) => {
             const pointsCell = createTableCell(result.points);
 
             // Styling for Driver and Const Cells
-            driverCell.classList.add('underline');
-            constCell.classList.add('underline');
+            driverCell.classList.add('underline', 'hover:cursor-pointer');
+            constCell.classList.add('underline', 'hover:cursor-pointer');
+
+            // Event Handlers for Driver and Constructors
+            driverCell.addEventListener("click", () => openDriverDialog(result.driver.id, year));
+            constCell.addEventListener('click', () => openConstructorDialog(result.constructor.id, year))
 
             row.appendChild(posCell);
             row.appendChild(driverCell);
@@ -256,9 +282,12 @@ document.addEventListener("DOMContentLoaded", (e) => {
             const q3 = createTableCell(result.q3);
 
             // Styling for Driver and Const Cells
-            driverCell.classList.add('underline');
-            constCell.classList.add('underline');
+            driverCell.classList.add('underline', 'hover:cursor-pointer');
+            constCell.classList.add('underline', 'hover:cursor-pointer');
 
+            // Event Handlers for Driver and Constructors
+            driverCell.addEventListener("click", () => openDriverDialog(result.driver.id, year));
+            constCell.addEventListener('click', () => openConstructorDialog(result.constructor.id, year))
 
             row.appendChild(posCell);
             row.appendChild(driverCell);
@@ -270,16 +299,213 @@ document.addEventListener("DOMContentLoaded", (e) => {
             qualifyingTable.appendChild(row);
         });
 
-        const headerCells = document.querySelectorAll("#qualifying-headers th");
+        document.querySelector("#race-results-title").textContent = `Results for ${qualifyingResults[0].race.name}`;
+    }
 
-        headerCells.forEach((headerCell, index) => {
-            const sortColumns = ['position', 'driver', 'constructor', 'q1', 'q2', 'q3'];
-            headerCell.addEventListener('click', () => {
-                displayQualifying(raceId, year, 'driver');
-            })
+    async function openCircuitDialog(circuitId) {
+        console.log(circuitId)
+        const dialog = document.querySelector("#circuit-dialog");
+        let circuitURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/circuits.php?id="
+
+        let circuitData = JSON.parse(localStorage.getItem(`circuit-${circuitId}`));
+
+        if(!circuitData) {
+            try {
+                showSpinner()
+
+                // Fetch circuit data from the server
+                const response = await fetch(`${ circuitURL }${ circuitId }`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch constructor data: ${ response.statusText }`);
+                }
+
+                circuitData = await response.json();
+
+                localStorage.setItem(`circuit-${circuitId}`, JSON.stringify(circuitData));
+            }
+            catch (error) {
+                alert("Failed to fetch circuit details. Please try again.");
+                return;
+            }
+            finally {
+                hideSpinner();
+            }
+        }
+
+        populateCircuitDialog(circuitData)
+
+        dialog.showModal()
+    }
+
+    async function openConstructorDialog(constructorId, year) {
+        const dialog = document.querySelector('#constructor-dialog')
+        let constructorURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/constructors.php?id="
+
+        // Retrieve constructor data from localstorage
+        let constructorData = JSON.parse(localStorage.getItem(`constructor-${constructorId}`))
+
+        if(!constructorData) {
+            try {
+                showSpinner(); // Show spinner while fetching data
+
+                // Fetch circuit data from the server
+                const response = await fetch(`${ constructorURL }${ constructorId }`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch constructor data: ${ response.statusText }`);
+                }
+
+                constructorData = await response.json();
+
+                // Store fetched data in localStorage
+                localStorage.setItem(`constructor-${constructorId}`, JSON.stringify(constructorData));
+            } catch (error) {
+                alert("Failed to fetch driver details. Please try again.");
+                return;
+            } finally {
+                hideSpinner(); // Hide spinner
+            }
+        }
+
+        populateConstructorDialog(constructorData, year)
+
+        dialog.showModal();
+    }
+
+    async function openDriverDialog(driverId, year) {
+        const dialog = document.querySelector("#driver-dialog");
+        let driverURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/drivers.php?id="
+
+        // Retrieve driver data from localStorage
+        let driverData = JSON.parse(localStorage.getItem(`driver-${ driverId }`));
+
+        if (!driverData) {
+            try {
+                showSpinner(); // Show spinner while fetching data
+
+                // Fetch driver data from the server
+                const response = await fetch(`${ driverURL }${ driverId }`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch driver data: ${ response.statusText }`);
+                }
+
+                driverData = await response.json();
+
+                // Store fetched data in localStorage
+                localStorage.setItem(`driver-${ driverId }`, JSON.stringify(driverData));
+            } catch (error) {
+                alert("Failed to fetch driver details. Please try again.");
+                return;
+            } finally {
+                hideSpinner(); // Hide spinner
+            }
+        }
+
+        populateDriverDialog(driverData, year)
+
+        dialog.showModal(); // Open the dialog
+    }
+
+    function populateCircuitDialog(circuitData) {
+        document.querySelector('#circuit-name').textContent = `Name: ${circuitData.name}`;
+        document.querySelector('#circuit-location').textContent = `Country: ${circuitData.location}`;
+        document.querySelector('#circuit-country').textContent = `Country: ${circuitData.country}`;
+        const URL = document.querySelector("#circuit-url")
+        URL.href = circuitData.url;
+        URL.textContent = circuitData.url;
+    }
+
+    function populateConstructorDialog(conData, year) {
+        document.querySelector("#constructor-name").textContent = `Name: ${conData.name}`
+        document.querySelector("#constructor-nationality").textContent = `Nationality: ${conData.nationality}`
+        const URL = document.querySelector("#constructor-url")
+        URL.href = conData.url;
+        URL.textContent = conData.url;
+
+        const resultsTableBody = document.querySelector('#constructor-results-body');
+        resultsTableBody.innerHTML = '';
+        const resultsData = JSON.parse(localStorage.getItem(`${year}-results`)).filter(r => r.constructor.id === conData.constructorId);
+
+        resultsData.forEach(r => {
+            const row = document.createElement("tr");
+
+            // Create cells
+            const rndCell = createTableCell(r.race.round)
+            const nameCell = createTableCell(r.race.name)
+            const posCell = createTableCell(r.position)
+            const pointsCell = createTableCell(r.points)
+
+            row.appendChild(rndCell);
+            row.appendChild(nameCell);
+            row.appendChild(posCell);
+            row.appendChild(pointsCell);
+
+            resultsTableBody.appendChild(row)
+        })
+    }
+
+    function populateDriverDialog(driverData, year) {
+        const dob = new Date(driverData.dob);
+        const age = calculateAge(dob);
+
+        document.querySelector('#driver-name').textContent = `Name: ${driverData.forename} ${driverData.surname}`;
+        document.querySelector('#driver-dob').textContent = `DOB: ${driverData.dob}`;
+        document.querySelector('#driver-age').textContent = `Age: ${age}`;
+        document.querySelector('#driver-nationality').textContent = `Nationality: ${driverData.nationality}`
+        const URL = document.querySelector('#driver-url')
+        URL.href = driverData.url
+        URL.textContent = driverData.url;
+
+        const resultsTableBody = document.querySelector('#driver-results-body');
+        resultsTableBody.innerHTML = '';
+        const raceData = JSON.parse(localStorage.getItem(`${year}-results`)).filter(r => r.driver.id === driverData.driverId);
+
+        raceData.forEach(r => {
+            const row = document.createElement("tr");
+
+            // Create cells
+            const rndCell = createTableCell(r.race.round)
+            const nameCell = createTableCell(r.race.name)
+            const posCell = createTableCell(r.position)
+            const pointsCell = createTableCell(r.points)
+
+            row.appendChild(rndCell);
+            row.appendChild(nameCell);
+            row.appendChild(posCell);
+            row.appendChild(pointsCell);
+
+            resultsTableBody.appendChild(row)
         })
 
-        document.querySelector("#race-results-title").textContent = `Results for ${qualifyingResults[0].race.name}`;
+
+    }
+
+    // Taken from https://stackoverflow.com/questions/4060004/calculate-age-given-the-birth-date-in-the-format-yyyymmdd
+    function calculateAge(dob) {
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDifference = today.getMonth() - dob.getMonth();
+
+        // Adjust age if today's date is before the birthday in the current year
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+
+        return age;
+    }
+
+    function closeDriverDialog() {
+        const dialog = document.getElementById("driver-dialog");
+        dialog.close();
+    }
+
+    function closeConstructorDialog() {
+        const dialog = document.getElementById("constructor-dialog");
+        dialog.close();
+    }
+
+    function closeCircuitDialog() {
+        const dialog = document.getElementById("circuit-dialog");
+        dialog.close();
     }
 
 
