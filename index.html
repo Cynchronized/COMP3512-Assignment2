@@ -10,15 +10,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <script src="./js/app.js"></script>
 </head>
 
-<body class="min-h-screen bg-gray-50 font-roboto">
+<body class="min-h-screen flex flex-col bg-gray-50 font-roboto">
 <header class="bg-black shadow-lg px-4 py-4">
   <nav class="flex items-center justify-between">
     <img
             src="./img/F1-logo.png"
             alt="F1 logo"
-            class="h-16 w-auto object-contain"
+            class="h-16 w-auto object-contain cursor-pointer
+           opacity-100 hover:opacity-50 transition-opacity duration-300"
+            id="f1-logo"
     />
     <h1 class="text-red-600 font-semibold text-2xl">
       F1 Dashboard Project
@@ -26,14 +29,14 @@
   </nav>
 </header>
 
-<main>
+<main class="flex-grow">
   <article class="flex" id="home">
     <div class="w-1/2 p-4 flex flex-col">
       <p class="text-2xl leading-relaxed">
         Hi, I'm Austin!
         This project explores Formula 1 racing data, built using vanilla JavaScript for functionality and styled with Tailwind CSS.
         <br class="mb-2">Check out the GitHub repository
-        <a href="https://github.com/Cynchronized/COMP3512-Assignment2" target="_blank" class="text-blue-600 hover:text-blue-700">COMP3512-Assignment2</a>
+        <a href="https://github.com/Cynchronized/COMP3512-Assignment2" target="_blank" class="text-blue-600 hover:text-blue-700 hover:underline">COMP3512-Assignment2</a>
       </p>
       <div class="flex items-center justify-center mt-40">
         <label for="season-select" class="font-bold mr-6 text-2xl mb-2">Season</label>
@@ -55,27 +58,92 @@
     </div>
   </article>
 
+  <!-- Spinner for loading animation -->
   <div id="spinner" class="fixed inset-0 flex items-center justify-center z-50 bg-gray-100/50 invisible">
     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
   </div>
 
-  <!-- Race Section -->
-  <section id="races" class="hidden p-4 bg-gray-100 rounded-lg shadow-md mt-6">
-  </section>
+  <div class="flex gap-6 m-4">
+    <!-- Races Section -->
+    <section id="races" class="hidden p-4 bg-gray-100 rounded-lg shadow-md mt-6 w-1/3">
+      <h1 id="race-year-display" class="text-2xl font-bold mb-4 text-center"></h1>
+      <table class="w-full border-collapse">
+        <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="px-4 py-2">Rnd</th>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Results</th>
+        </tr>
+        </thead>
+        <tbody id="races-display">
+        <!-- Race rows will be populated here-->
+        </tbody>
+      </table>
+    </section>
 
-  <section id="raceResults">
-    <div id="qualifying"></div>
-    <div id="result"></div>
-  </section>
+    <!-- Race Results Section -->
+    <section id="raceResults" class="hidden p-4 rounded-lg shadow-md mt-6 w-2/3">
+      <h1 id="race-results-title" class="text-center font-bold text-2xl m-4"></h1>
 
-  <footer class="fixed bottom-0 left-0 z-20 w-full p-4 bg-black shadow md:flex md:items-center md:justify-center md:p-6">
-    <span class="text-lg text-red-600 sm:text-center">Copyright © 2024 Cynchronized <a href="https://github.com/Cynchronized" target="_blank"> <i class="ml-1 fab fa-github hover:animate-spin"></i></a>
-    </span>
-  </footer>
+      <ul id="race-info" class="flex space-x-6 py-2">
+
+      </ul>
+
+
+      <div class="flex gap-6">
+        <!-- Qualifying Results -->
+        <div id="qualifying" class="w-1/2 bg-gray-100">
+          <h2 class="text-xl font-semibold mb-2 text-center p-2">Qualifying Results</h2>
+          <table class="w-full border-collapse">
+            <thead>
+            <tr id="qualifying-headers" class="bg-gray-200 text-left">
+              <th class="px-4 py-2">Pos</th>
+              <th class="px-4 py-2">Name</th>
+              <th class="px-4 py-2">Const</th>
+              <th class="px-4 py-2">Q1</th>
+              <th class="px-4 py-2">Q2</th>
+              <th class="px-4 py-2">Q3</th>
+            </tr>
+            </thead>
+            <tbody id="qualifying-results">
+            <!-- Qualifying results rows will be populated here-->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Race Results -->
+        <div id="result" class="w-1/2 bg-gray-100">
+          <h2 class="text-xl font-semibold mb-2 text-center p-2">Race Results</h2>
+          <table class="w-full border-collapse">
+            <thead>
+            <tr class="bg-gray-200 text-left">
+              <th class="px-4 py-2">Pos</th>
+              <th class="px-4 py-2">Name</th>
+              <th class="px-4 py-2">Const</th>
+              <th class="px-4 py-2">Laps</th>
+              <th class="px-4 py-2">Pts</th>
+            </tr>
+            </thead>
+            <tbody id="race-result-data">
+            <!-- Race results rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+
 </main>
 
-<script src="js/app.js"></script>
-
+<footer class="w-full p-4 bg-black shadow md:flex md:items-center md:justify-center md:p-6">
+    <span class="text-lg text-red-600 flex items-center justify-center gap-2">
+      Copyright © 2024 Cynchronized
+      <a href="https://github.com/Cynchronized" target="_blank" class="text-red-600 hover:text-red-400 transition-colors">
+          <i class="fab fa-github hover:animate-spin"></i>
+      </a>
+    </span>
+</footer>
 </body>
 
 </html>
