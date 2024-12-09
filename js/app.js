@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
     const seasonSelect = document.querySelector('#season-select');
     const races = document.querySelector('#races');
     const home = document.querySelector('#home');
+    const raceResults = document.querySelector('#raceResults');
     const spinner = document.querySelector('#spinner');
     const F1Logo = document.querySelector('#f1-logo');
     let raceURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/races.php?season="
@@ -10,26 +11,6 @@ document.addEventListener("DOMContentLoaded", (e) => {
     const driverCloseButton = document.querySelector("#driver-dialog-close");
     const constructorCloseButton = document.querySelector("#constructor-dialog-close");
     const circuitCloseButton = document.querySelector('#circuit-dialog-close')
-
-    // Go back to home page
-    F1Logo.addEventListener('click', (e) => {
-        if(home.classList.contains('hidden')) {
-            home.classList.toggle('hidden');
-            races.classList.toggle('hidden');
-        }
-    })
-
-    circuitCloseButton.addEventListener("click", () => {
-        closeCircuitDialog()
-    })
-
-    driverCloseButton.addEventListener("click", () => {
-        closeDriverDialog()
-    });
-
-    constructorCloseButton.addEventListener("click", () => {
-        closeConstructorDialog()
-    })
 
 
     // Drop-down check if user selects season
@@ -112,6 +93,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         }
     }
 
+    // Race information when user selects race
     function displayRaceInfo(raceId, raceYear) {
         const list = document.querySelector("#race-info");
         list.innerHTML = ''; // Clear previous content
@@ -137,7 +119,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
             // Underline the circuit value
             if (r.underline) {
-                valueSpan.classList.add('underline', 'hover:cursor-pointer');
+                valueSpan.classList.add('underline', 'hover:cursor-pointer', 'hover:opacity-50');
                 valueSpan.addEventListener('click', () => openCircuitDialog(r.circuitId))
             }
 
@@ -168,20 +150,73 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
     }
 
+    // Default race row
     function createRaceRow(race, year) {
         const tableRow = document.createElement("tr");
 
         const roundCell = createTableCell(race.round);
         const nameCell = createTableCell(race.name);
         const resultCell = createResultCell(race.id, year);
+        const favoritesCell = createFavoritesCell(race.id, race.name, 'race', year);
+
 
         tableRow.appendChild(roundCell);
         tableRow.appendChild(nameCell);
         tableRow.appendChild(resultCell);
+        tableRow.appendChild(favoritesCell);
 
         return tableRow;
     }
 
+    // Create a cell for races display
+    function createFavoritesCell(itemName, itemId, type, year) {
+        const favoritesCell = document.createElement("td");
+
+        const heartButton = createFavoritesButton(itemName, itemId, type, year);
+
+        favoritesCell.appendChild(heartButton);
+
+        return favoritesCell;
+    }
+
+    // Create a heart button with favorites logic
+    function createFavoritesButton(itemName, itemId, type, year) {
+        const heartButton = document.createElement('button');
+        heartButton.className = 'ml-auto';  // Align the button to the right
+
+        // Get the current list of favorites from localStorage
+        const favorites = getFavorites();
+        let isFavorited = favorites.find(favorite => favorite.id === itemId && favorite.type === type && favorite.year === year);
+
+        // Set the initial heart icon based on whether the item is favorited
+        updateHeartIcon(heartButton, isFavorited);
+
+        // Add click event listener to toggle favorite state
+        heartButton.addEventListener('click', () => {
+            isFavorited = !isFavorited;
+            updateHeartIcon(heartButton, isFavorited);
+
+            // Update the favorites list
+            if (isFavorited) {
+                // Add item to favorites array
+                favorites.push({ id: itemId, name: itemName, type: type, year: year });
+            } else {
+                // Remove item from favorites array
+                const index = favorites.findIndex(favorite => favorite.id === itemId && favorite.type === type && favorite.year === year);
+                if (index > -1) {
+                    favorites.splice(index, 1);
+                }
+            }
+
+            // Save updated favorites list to localStorage
+            saveFavorites(favorites);
+
+        });
+
+        return heartButton;
+    }
+
+    // Default Table cell
     function createTableCell(content) {
         const cell = document.createElement('td');
         // Default cell styling
@@ -191,9 +226,10 @@ document.addEventListener("DOMContentLoaded", (e) => {
     }
 
 
+    // Creating Result Cell with styling
     function createResultCell(raceId, year) {
         const resultCell = document.createElement("td");
-        resultCell.classList.add("px-4", "py-2");
+        resultCell.classList.add("px-2", "py-2");
 
         const resultButton = document.createElement("button");
         resultButton.textContent = "View";
@@ -214,16 +250,56 @@ document.addEventListener("DOMContentLoaded", (e) => {
         return resultCell;
     }
 
-    function displayRaceResults(raceId, year) {
-        const resultSection = document.querySelector("#raceResults");
-        if (resultSection.classList.contains('hidden')) {
-            resultSection.classList.toggle('hidden');
-        }
-        displayQualifying(raceId, year);
-        displayResults(raceId, year);
-        displayRaceInfo(raceId, year);
+    // Default driver cell
+    function createDriverCell(driver, year) {
+        const cell = document.createElement('td');
+        cell.className = 'px-2 py-2';
+
+        const cellContainer = document.createElement('div');
+        cellContainer.className = 'flex items-center space-x-2';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `${driver.forename} ${driver.surname}`;
+        textSpan.className = 'text-sm hover:opacity-50 hover:cursor-pointer underline';
+
+        // Create heart button
+        const heartButton = createFavoritesButton(driver.id, `${driver.forename} ${driver.surname}`, 'race', year);
+
+        textSpan.addEventListener('click', () => openDriverDialog(driver.id, year));
+
+        cellContainer.appendChild(textSpan);
+        cellContainer.appendChild(heartButton);
+        cell.appendChild(cellContainer);
+
+        return cell;
     }
 
+    // Default constructor cell
+    function createConCell(constructor, year) {
+        const cell = document.createElement('td');
+        cell.className = 'px-2 py-2';
+
+        const cellContainer = document.createElement('div');
+        cellContainer.className = 'flex items-center space-x-2';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = constructor.name;
+        textSpan.className = 'text-sm hover:opacity-50 hover:cursor-pointer underline';
+
+        // Create heart button
+        const heartButton = createFavoritesButton(constructor.id, constructor.name, 'constructor', year);
+
+        textSpan.addEventListener('click', () => openConstructorDialog(constructor.id, year));
+
+        cellContainer.appendChild(textSpan);
+        cellContainer.appendChild(heartButton);
+        cell.appendChild(cellContainer);
+
+        return cell;
+    }
+
+
+    // Display Race results
     function displayResults(raceId, year) {
         const resultsData = JSON.parse(localStorage.getItem(`${year}-results`));
 
@@ -234,19 +310,13 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
         Results.forEach(result => {
             const row = document.createElement("tr");
+
             const posCell = createTableCell(result.position);
-            const driverCell = createTableCell(`${result.driver.forename} ${result.driver.surname}`);
-            const constCell = createTableCell(result.constructor.name);
+            const driverCell = createDriverCell(result.driver, year)
+            const constCell = createConCell(result.constructor, year);
             const lapCell = createTableCell(result.laps);
             const pointsCell = createTableCell(result.points);
 
-            // Styling for Driver and Const Cells
-            driverCell.classList.add('underline', 'hover:cursor-pointer');
-            constCell.classList.add('underline', 'hover:cursor-pointer');
-
-            // Event Handlers for Driver and Constructors
-            driverCell.addEventListener("click", () => openDriverDialog(result.driver.id, year));
-            constCell.addEventListener('click', () => openConstructorDialog(result.constructor.id, year))
 
             row.appendChild(posCell);
             row.appendChild(driverCell);
@@ -258,8 +328,21 @@ document.addEventListener("DOMContentLoaded", (e) => {
         })
     }
 
+    // Display the  results
+    function displayRaceResults(raceId, year) {
+        const resultSection = document.querySelector("#raceResults");
+        if (resultSection.classList.contains('hidden')) {
+            resultSection.classList.toggle('hidden');
+        }
+        displayQualifying(raceId, year);
+        displayResults(raceId, year);
+        displayRaceInfo(raceId, year);
+    }
+
+
 
     // TODO: Sorting
+    // Display the qualifying results
     function displayQualifying(raceId, year) {
         const qualifyingData = JSON.parse(localStorage.getItem(`${year}-qualifying`));
 
@@ -275,19 +358,11 @@ document.addEventListener("DOMContentLoaded", (e) => {
         qualifyingResults.forEach(result => {
             const row = document.createElement("tr");
             const posCell = createTableCell(result.position);
-            const driverCell = createTableCell(`${result.driver.forename} ${result.driver.surname}`);
-            const constCell = createTableCell(result.constructor.name);
+            const driverCell = createDriverCell(result.driver, year)
+            const constCell = createConCell(result.constructor, year);
             const q1 = createTableCell(result.q1);
             const q2 = createTableCell(result.q2);
             const q3 = createTableCell(result.q3);
-
-            // Styling for Driver and Const Cells
-            driverCell.classList.add('underline', 'hover:cursor-pointer');
-            constCell.classList.add('underline', 'hover:cursor-pointer');
-
-            // Event Handlers for Driver and Constructors
-            driverCell.addEventListener("click", () => openDriverDialog(result.driver.id, year));
-            constCell.addEventListener('click', () => openConstructorDialog(result.constructor.id, year))
 
             row.appendChild(posCell);
             row.appendChild(driverCell);
@@ -302,6 +377,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         document.querySelector("#race-results-title").textContent = `Results for ${qualifyingResults[0].race.name}`;
     }
 
+    // Handles opening of Circuit Dialog
     async function openCircuitDialog(circuitId) {
         console.log(circuitId)
         const dialog = document.querySelector("#circuit-dialog");
@@ -337,6 +413,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         dialog.showModal()
     }
 
+    // Handling opening of Constructor Dialog
     async function openConstructorDialog(constructorId, year) {
         const dialog = document.querySelector('#constructor-dialog')
         let constructorURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/constructors.php?id="
@@ -370,7 +447,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
         dialog.showModal();
     }
-
+    // Handling opening of Driver Dialog
     async function openDriverDialog(driverId, year) {
         const dialog = document.querySelector("#driver-dialog");
         let driverURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/drivers.php?id="
@@ -405,6 +482,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         dialog.showModal(); // Open the dialog
     }
 
+    // Populates the Circuit Dialog
     function populateCircuitDialog(circuitData) {
         document.querySelector('#circuit-name').textContent = `Name: ${circuitData.name}`;
         document.querySelector('#circuit-location').textContent = `Country: ${circuitData.location}`;
@@ -414,6 +492,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         URL.textContent = circuitData.url;
     }
 
+    // Populates the Constructor Dialog
     function populateConstructorDialog(conData, year) {
         document.querySelector("#constructor-name").textContent = `Name: ${conData.name}`
         document.querySelector("#constructor-nationality").textContent = `Nationality: ${conData.nationality}`
@@ -443,6 +522,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         })
     }
 
+    // Populates the Driver Dialog
     function populateDriverDialog(driverData, year) {
         const dob = new Date(driverData.dob);
         const age = calculateAge(dob);
@@ -493,21 +573,11 @@ document.addEventListener("DOMContentLoaded", (e) => {
         return age;
     }
 
-    function closeDriverDialog() {
-        const dialog = document.getElementById("driver-dialog");
+    // Close dialog
+    function closeDialog(dialogId) {
+        const dialog = document.getElementById(dialogId);
         dialog.close();
     }
-
-    function closeConstructorDialog() {
-        const dialog = document.getElementById("constructor-dialog");
-        dialog.close();
-    }
-
-    function closeCircuitDialog() {
-        const dialog = document.getElementById("circuit-dialog");
-        dialog.close();
-    }
-
 
     // Spinner functions for loading
     function showSpinner() {
@@ -517,5 +587,59 @@ document.addEventListener("DOMContentLoaded", (e) => {
     function hideSpinner() {
         spinner.classList.add('invisible')
     }
+
+    // Favorites logic
+    const updateHeartIcon = (btn, isFavorited) => {
+        if (isFavorited) {
+            btn.classList.add('text-red-500');
+            btn.classList.remove('text-gray-500');
+            btn.innerHTML = `
+   <!-- Filled Heart Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  `;
+        } else {
+            btn.classList.remove('text-red-500');
+            btn.classList.add('text-gray-500');
+            btn.innerHTML = `
+   <!-- Outlined Heart Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+    </svg>
+  `;
+        }
+    };
+
+    // Function to get the list of favorites from localStorage
+    function getFavorites() {
+        const favorites = localStorage.getItem('favorites');
+        return favorites ? JSON.parse(favorites) : [];
+    }
+
+    // Function to save the updated list of favorites to localStorage
+    function saveFavorites(favorites) {
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+    }
+
+
+    // Go back to home page
+    F1Logo.addEventListener('click', (e) => {
+        if(home.classList.contains('hidden')) {
+            home.classList.toggle('hidden');
+            seasonSelect.selectedIndex = 0;
+        }
+        if(!races.classList.contains('hidden')) {
+            races.classList.toggle('hidden');
+        }
+        if(!raceResults.classList.contains('hidden')) {
+            raceResults.classList.toggle('hidden');
+        }
+    })
+
+    // Event listeners for dialogs
+    circuitCloseButton.addEventListener("click", () => closeDialog("circuit-dialog"));
+    driverCloseButton.addEventListener("click", () => closeDialog("driver-dialog"));
+    constructorCloseButton.addEventListener("click", () => closeDialog("constructor-dialog"));
 
 });
