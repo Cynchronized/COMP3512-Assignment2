@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
     let currentRaceData = [];
     let currentQualifyingData = [];
     let currentResultsData = [];
-    const raceTableHeaders = document.querySelectorAll("#races th");
+    const raceTableHeaders = document.querySelectorAll("#races th[data-column='round'], #races th[data-column='name']");
     const qualifyingTableHeaders = document.querySelectorAll("#qualifying th");
     const resultsTableHeaders = document.querySelectorAll("#result th");
 
