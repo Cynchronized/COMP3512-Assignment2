@@ -1,16 +1,31 @@
 document.addEventListener("DOMContentLoaded", (e) => {
+
+    // Various DOM
     const seasonSelect = document.querySelector('#season-select');
     const races = document.querySelector('#races');
     const home = document.querySelector('#home');
     const raceResults = document.querySelector('#raceResults');
     const spinner = document.querySelector('#spinner');
     const F1Logo = document.querySelector('#f1-logo');
+
+    // API URLs
     let raceURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/races.php?season="
     let resultsURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/results.php?season="
     let qualifyingURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/qualifying.php?season="
+
+    // For dialogs
     const driverCloseButton = document.querySelector("#driver-dialog-close");
     const constructorCloseButton = document.querySelector("#constructor-dialog-close");
     const circuitCloseButton = document.querySelector('#circuit-dialog-close')
+
+    // Variables for sorting
+    let currentRaceData = [];
+    let currentQualifyingData = [];
+    let currentResultsData = [];
+    const raceTableHeaders = document.querySelectorAll("#races th");
+    const qualifyingTableHeaders = document.querySelectorAll("#qualifying th");
+    const resultsTableHeaders = document.querySelectorAll("#result th");
+
 
 
     // Drop-down check if user selects season
@@ -73,6 +88,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
     // Display Results of a season
     function displayRaces(raceData) {
+        currentRaceData = raceData;
         const yearDisplay = document.querySelector("#race-year-display");
         const tableBody = document.querySelector("#races-display");
 
@@ -93,11 +109,11 @@ document.addEventListener("DOMContentLoaded", (e) => {
         }
     }
 
+
     // Race information when user selects race
-    function displayRaceInfo(raceId, raceYear) {
+    function displayRaceInfo(raceInfo) {
         const list = document.querySelector("#race-info");
         list.innerHTML = ''; // Clear previous content
-        const raceInfo = JSON.parse(localStorage.getItem(`${raceYear}-races`)).filter(r => r.id === raceId);
 
         const raceDetails = [
             { label: 'Round', value: raceInfo[0].round },
@@ -298,25 +314,49 @@ document.addEventListener("DOMContentLoaded", (e) => {
         return cell;
     }
 
+    // Display the results
+    function displayRaceResults(raceId, year) {
+        const resultSection = document.querySelector("#raceResults");
+        if (resultSection.classList.contains('hidden')) {
+            resultSection.classList.toggle('hidden');
+        }
+
+        const resultsData = JSON.parse(localStorage.getItem(`${year}-results`));
+        const qualifyingData = JSON.parse(localStorage.getItem(`${year}-qualifying`));
+        const raceData = JSON.parse(localStorage.getItem(`${year}-races`));
+
+        // Filter data for the given raceId
+        const filteredResults = resultsData.filter(r => r.race.id === raceId);
+        const filteredQualifying = qualifyingData.filter(r => r.race.id === raceId);
+        const filteredRace = raceData.filter(race => race.id === raceId)
+
+
+        displayQualifying(filteredQualifying);
+        displayResults(filteredResults);
+        displayRaceInfo(filteredRace);
+    }
+
+
 
     // Display Race results
-    function displayResults(raceId, year) {
-        const resultsData = JSON.parse(localStorage.getItem(`${year}-results`));
-
-        const Results = resultsData.filter(r => r.race.id === raceId);
+    function displayResults(resultsData) {
+        currentResultsData = resultsData;
 
         const resultsTable = document.querySelector("#race-result-data");
         resultsTable.innerHTML = '';
 
-        Results.forEach(result => {
+        displayResultsTable(resultsData, resultsTable, resultsData[0].race.year);
+    }
+
+    function displayResultsTable(results, resultsTable, year) {
+        results.forEach(result => {
             const row = document.createElement("tr");
 
             const posCell = createTableCell(result.position);
-            const driverCell = createDriverCell(result.driver, year)
+            const driverCell = createDriverCell(result.driver, year);
             const constCell = createConCell(result.constructor, year);
             const lapCell = createTableCell(result.laps);
             const pointsCell = createTableCell(result.points);
-
 
             row.appendChild(posCell);
             row.appendChild(driverCell);
@@ -325,40 +365,30 @@ document.addEventListener("DOMContentLoaded", (e) => {
             row.appendChild(pointsCell);
 
             resultsTable.appendChild(row);
-        })
-    }
-
-    // Display the  results
-    function displayRaceResults(raceId, year) {
-        const resultSection = document.querySelector("#raceResults");
-        if (resultSection.classList.contains('hidden')) {
-            resultSection.classList.toggle('hidden');
-        }
-        displayQualifying(raceId, year);
-        displayResults(raceId, year);
-        displayRaceInfo(raceId, year);
+        });
     }
 
 
-
-    // TODO: Sorting
     // Display the qualifying results
-    function displayQualifying(raceId, year) {
-        const qualifyingData = JSON.parse(localStorage.getItem(`${year}-qualifying`));
+    function displayQualifying(qualifyingData) {
+        currentQualifyingData = qualifyingData;
 
-        // Filter qualifying data for the selected race
-        const qualifyingResults = qualifyingData
-            .filter(r => r.race.id === raceId)
-
-        // Assuming you want to display qualifying results
         const qualifyingTable = document.querySelector("#qualifying-results");
         qualifyingTable.innerHTML = '';  // Clear previous results
 
-        // Populate qualifying table
+        // Initially populate the table with qualifying results
+        populateQualifyingTable(qualifyingData, qualifyingTable, qualifyingData[0].race.year);
+
+        document.querySelector("#race-results-title").textContent = `Results for ${qualifyingData[0].race.name}`;
+    }
+
+
+
+    function populateQualifyingTable(qualifyingResults, qualifyingTable, year) {
         qualifyingResults.forEach(result => {
             const row = document.createElement("tr");
             const posCell = createTableCell(result.position);
-            const driverCell = createDriverCell(result.driver, year)
+            const driverCell = createDriverCell(result.driver, year);
             const constCell = createConCell(result.constructor, year);
             const q1 = createTableCell(result.q1);
             const q2 = createTableCell(result.q2);
@@ -367,19 +397,17 @@ document.addEventListener("DOMContentLoaded", (e) => {
             row.appendChild(posCell);
             row.appendChild(driverCell);
             row.appendChild(constCell);
-            row.appendChild(q1)
-            row.appendChild(q2)
-            row.appendChild(q3)
+            row.appendChild(q1);
+            row.appendChild(q2);
+            row.appendChild(q3);
 
             qualifyingTable.appendChild(row);
         });
-
-        document.querySelector("#race-results-title").textContent = `Results for ${qualifyingResults[0].race.name}`;
     }
+
 
     // Handles opening of Circuit Dialog
     async function openCircuitDialog(circuitId) {
-        console.log(circuitId)
         const dialog = document.querySelector("#circuit-dialog");
         let circuitURL = "https://www.randyconnolly.com/funwebdev/3rd/api/f1/circuits.php?id="
 
@@ -588,13 +616,14 @@ document.addEventListener("DOMContentLoaded", (e) => {
         spinner.classList.add('invisible')
     }
 
+
     // Favorites logic
     const updateHeartIcon = (btn, isFavorited) => {
         if (isFavorited) {
             btn.classList.add('text-red-500');
             btn.classList.remove('text-gray-500');
             btn.innerHTML = `
-   <!-- Filled Heart Icon -->
+   <!-- Filled Heart Icon from https://heroicons.com/-->
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
@@ -603,7 +632,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
             btn.classList.remove('text-red-500');
             btn.classList.add('text-gray-500');
             btn.innerHTML = `
-   <!-- Outlined Heart Icon -->
+   <!-- Outlined Heart Icon from https://heroicons.com/-->
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
       <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
     </svg>
@@ -642,4 +671,93 @@ document.addEventListener("DOMContentLoaded", (e) => {
     driverCloseButton.addEventListener("click", () => closeDialog("driver-dialog"));
     constructorCloseButton.addEventListener("click", () => closeDialog("constructor-dialog"));
 
+
+    /* SORTING FUNCTIONS */
+    function toggleSortOrder(header) {
+        const column = header.dataset.column;
+        const currentOrder = header.dataset.order || "asc";
+
+        // Toggle between ascending and descending
+        const newOrder = currentOrder === "asc" ? "desc" : "asc";
+        header.dataset.order = newOrder;
+
+        return { column, newOrder };
+    }
+
+    // Reset header arrows
+    function resetHeaderArrows(headers) {
+        headers.forEach(h => {
+            const baseText = h.textContent.replace(/[\u25B2\u25BC]/g, "").trim();
+            h.textContent = baseText;
+        });
+    }
+
+    // Add sort arrows from https://www.fileformat.info/info/unicode/char/25bc/index.htm
+    function addSortArrow(header, order) {
+        const arrow = order === "asc" ? " \u25B2" : " \u25BC";
+        header.textContent = header.textContent.trim() + arrow;
+    }
+
+    // Sorting function to sort data of tables
+    function Sort(data, column, newOrder) {
+        return [...data].sort((a, b) => {
+            const valueA = a[column];
+            const valueB = b[column];
+
+            // Comparison function
+            const compareValues = (x, y) => {
+                if (typeof x === "string" && typeof y === "string") {
+                    return x.localeCompare(y, undefined, {
+                        sensitivity: 'base',
+                        ignorePunctuation: true,
+                        numeric: true // To handle integers
+                    });
+                }
+
+                // Standard comparison
+                return x > y ? 1 : (x < y ? -1 : 0);
+            };
+
+            // Apply comparison with order
+            const comparison = compareValues(valueA, valueB);
+            return newOrder === "asc" ? comparison : -comparison;
+        });
+    }
+
+
+    // Event listeners for sorting tables
+    raceTableHeaders.forEach(header => {
+        header.addEventListener("click", (e) => {
+            handleTableSorting(e, raceTableHeaders, currentRaceData, displayRaces);
+        });
+    });
+
+    qualifyingTableHeaders.forEach(header => {
+        header.addEventListener("click", (e) => {
+            handleTableSorting(e, qualifyingTableHeaders, currentQualifyingData, displayRaces);
+        });
+    });
+
+    resultsTableHeaders.forEach(header => {
+        header.addEventListener("click", (e) => {
+            handleTableSorting(e, qualifyingTableHeaders, currentResultsData, displayRaces);
+        });
+    });
+
+        function handleTableSorting(event, tableHeaders, dataSource, displayFunction) {
+            // Toggle sort order and get column and new order
+            const { column, newOrder } = toggleSortOrder(event.target);
+
+            // Reset all header arrows
+            resetHeaderArrows(tableHeaders);
+
+            // Add arrow to the clicked header
+            addSortArrow(event.target, newOrder);
+
+            // Sort the data
+            const sortedData = Sort(dataSource, column, newOrder);
+
+            // Redisplay the sorted data
+            displayFunction(sortedData);
+        }
 });
