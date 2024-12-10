@@ -700,29 +700,30 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
     // Sorting function to sort data of tables
     function Sort(data, column, newOrder) {
+        const compareValues = (x, y) => {
+            // If both values are strings, use localeCompare
+            if (typeof x === "string" && typeof y === "string") {
+                return x.localeCompare(y, undefined, {
+                    sensitivity: 'base',
+                    ignorePunctuation: true,
+                    numeric: true
+                });
+            }
+
+            // Standard comparison
+            return x > y ? 1 : (x < y ? -1 : 0);
+        };
+
+        // Sort the data array using the provided column and order
         return [...data].sort((a, b) => {
             const valueA = a[column];
             const valueB = b[column];
 
-            // Comparison function
-            const compareValues = (x, y) => {
-                if (typeof x === "string" && typeof y === "string") {
-                    return x.localeCompare(y, undefined, {
-                        sensitivity: 'base',
-                        ignorePunctuation: true,
-                        numeric: true // To handle integers
-                    });
-                }
-
-                // Standard comparison
-                return x > y ? 1 : (x < y ? -1 : 0);
-            };
-
-            // Apply comparison with order
             const comparison = compareValues(valueA, valueB);
             return newOrder === "asc" ? comparison : -comparison;
         });
     }
+
 
 
     // Event listeners for sorting tables
@@ -734,13 +735,13 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
     qualifyingTableHeaders.forEach(header => {
         header.addEventListener("click", (e) => {
-            handleTableSorting(e, qualifyingTableHeaders, currentQualifyingData, displayRaces);
+            handleTableSorting(e, qualifyingTableHeaders, currentQualifyingData, displayQualifying);
         });
     });
 
     resultsTableHeaders.forEach(header => {
         header.addEventListener("click", (e) => {
-            handleTableSorting(e, qualifyingTableHeaders, currentResultsData, displayRaces);
+            handleTableSorting(e, resultsTableHeaders, currentResultsData, displayResults);
         });
     });
 
